@@ -1,4 +1,6 @@
 # RFI Autologger for SDR by N4EAC
+<img width="1247" height="979" alt="image" src="https://github.com/user-attachments/assets/bed7e671-663d-4129-bb44-2ae018a3cccb" />
+
 
 **Version:** `1.0.0-rc1a`  
 **Platform:** Windows 10/11  
