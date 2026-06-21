@@ -39,8 +39,6 @@ SDRplay support is functional but still marked beta. For SDRplay, connect the re
 - KML export for Google Earth
 - Editable KML color thresholds based on `Signal_dBFS`
 - Tuned-channel pre-demod IQ dBFS measurement for better RF mapping
-- Dark military-style field UI
-- Clean shutdown when closing with the Windows X button
 
 ---
 
@@ -192,9 +190,7 @@ Receive → Listen → Measure → GPS Log → Map
 The goal is practical RF interference hunting in the field.
 
 ## Installation
-<p></p>
-Download the zip file. Unzip it in your desired directory. Create a shortcut from there to run the program.
-Make sure RTL-SDR driver is installed for RTL-SDR radio. Also ensure SDRPlay API is installed if using SDRPlay. HackRF One dll already included in the zip file.</p>
+<p>Download the zip file. Unzip it in your desired directory. Create a shortcut from there to run the program. Make sure RTL-SDR driver is installed for RTL-SDR radio. Also ensure SDRPlay API is installed if using SDRPlay. HackRF One dll already included in the zip file.</p>
 ---
 
 ## Credits
