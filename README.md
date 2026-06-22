@@ -1,9 +1,8 @@
 # RFI Autologger for SDR by N4EAC
 
-**Version:** `1.0.0-rc4`  
+**Version:** `1.0.0-rc8`  
 **Platform:** Windows 10/11  
-**Status:** Release Candidate 4
-<img width="1175" height="887" alt="image" src="https://github.com/user-attachments/assets/39860818-f3c7-4815-ae1b-1584e8601b60" />
+**Status:** Release Candidate 5
 
 RFI Autologger for SDR by N4EAC is a field-oriented RF interference logging tool for SDR receivers. It is designed to help locate and document RF interference by receiving a signal, measuring tuned-channel signal level in dBFS, recording GPS position, and exporting logs to CSV and Google Earth KML.
 
@@ -11,9 +10,9 @@ The interface is intentionally simple and instrument-like: frequency, mode, sign
 
 ---
 
-### RC4 Layout Note
+### RC6 UI Note
 
-The main interface now scrolls vertically on lower-resolution displays. If controls do not fit on the screen, use the mouse wheel or the right-side scrollbar. No SDR, DSP, GPS, logging, or KML behavior was changed for RC4.
+RC6 keeps the two-column 1280x720-friendly layout from RC5 and refines the CDE-inspired theme. The main application remains purple/beige, while the Receiver Panel dot-matrix display now uses a dark recessed instrument-style background for improved readability. No SDR, DSP, GPS, logging, or KML behavior was changed for RC6.
 
 
 ## Supported SDR Receivers
@@ -226,3 +225,36 @@ Changes:
 - GPS coordinates/time remain visible in the Receiver Panel.
 
 Known limitation: SDRplay should be connected before launching the app; SDRplay hot-plug is not yet reliable.
+
+
+## v1.0.0-rc8 UI update
+
+- Reworked the UI to fit 1280x720-class screens without a scrollbar.
+- Panels now use a two-column adaptive layout and expand on larger displays.
+- Reversed the CDE-inspired colors: purple background with beige foreground.
+- No SDR, DSP, audio, GPS, CSV, or KML logic changes.
+
+
+## v1.0.0-rc8 UI refinement
+
+- Kept the RC5 two-column layout for 1280x720-class screens.
+- Changed only the Receiver Panel dot-matrix display to a dark recessed instrument-style background.
+- Kept the CDE-inspired purple/beige application shell.
+- No SDR, DSP, audio, GPS, logging, or KML logic changes.
+
+
+## v1.0.0-rc8 UI fit refinement
+- Compact Receiver Panel display to reduce wasted space.
+- Equalized the two main UI columns so controls remain visible on 1280x720-class screens.
+- Reduced receiver dot-matrix panel height and spacing.
+- Kept the dark recessed receiver display and purple/beige CDE-style theme.
+- No SDR/DSP/audio/GPS/KML logic changes.
+
+
+## v1.0.0-rc8 layout refinement
+
+- Reworked the Mode / SDR section so all mode buttons remain visible on 1280x720-class displays.
+- Moved Mode / SDR below the frequency controls.
+- Arranged mode buttons in a compact two-row grid.
+- Increased the minimum window width/height to prevent controls from disappearing off the edge.
+- No SDR, DSP, audio, GPS, logging, or KML logic changes.

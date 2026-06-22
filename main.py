@@ -109,10 +109,13 @@ class StatusSink:
 
 class DotMatrixPanel(tk.Canvas):
     def __init__(self, master, **kwargs):
-        super().__init__(master, bg="#D6C79B", highlightthickness=1, highlightbackground="#A99972", bd=0, height=270, **kwargs)
-        self.active = "#4B2A74"
-        self.dim = "#B8A778"
-        self.glow = "#5E3A8C"
+        super().__init__(master, bg="#1A151D", highlightthickness=1, highlightbackground="#C8B889", bd=0, height=170, **kwargs)
+        # RC6: keep the overall purple/beige CDE theme, but make the
+        # receiver dot-matrix display a dark recessed instrument panel so
+        # live data remains readable on lower-resolution screens.
+        self.active = "#F0E6C8"
+        self.dim = "#3F3548"
+        self.glow = "#F6C86A"
         self.freq_text = "132.000000"
         self.mode_text = "AM"
         self.range_text = ""
@@ -192,26 +195,24 @@ class DotMatrixPanel(tk.Canvas):
 
     def redraw(self):
         self.delete("all")
-        w = max(720, self.winfo_width())
-        h = max(220, self.winfo_height())
+        w = max(520, self.winfo_width())
+        h = max(170, self.winfo_height())
         for yy in range(0, h, 4):
-            self.create_line(0, yy, w, yy, fill="#BCAA7A")
+            self.create_line(0, yy, w, yy, fill="#241D29")
 
         # v0.1.23: spectrum removed.  The panel is now a lighter CRT
         # instrument display focused on frequency, mode, and signal only.
-        self._dot_text(14, 14, "FREQ", scale=2)
-        self._dot_text(92, 8, self.freq_text, scale=5, spacing=2, color=self.glow)
-        self._dot_text(14, 74, f"MODE {self.mode_text}", scale=2)
+        # RC7: compact receiver display so the full UI fits 1280x720-class screens.
+        self._dot_text(12, 10, "FREQ", scale=2)
+        self._dot_text(86, 6, self.freq_text, scale=4, spacing=2, color=self.glow, max_chars=12)
+        self._dot_text(12, 58, f"MODE {self.mode_text}", scale=2)
 
-        # v0.5.8: remove the graphical signal bar.  The logger now shows only
-        # the numeric tuned-channel signal value used for CSV/KML mapping.
-        sig_x = 14
-        sig_y = 122
-        self._dot_text(sig_x, sig_y, f"SIGNAL {self.dbfs:.1f} dBFS", scale=3, color=self.glow, max_chars=24)
+        # Numeric tuned-channel signal value used for CSV/KML mapping.
+        self._dot_text(12, 88, f"SIGNAL {self.dbfs:.1f} dBFS", scale=2, color=self.glow, max_chars=28)
 
         # GPS readout in the receiver panel.
-        self._dot_text(14, 216, self.gps_line, scale=2, color=self.active, max_chars=34)
-        self._dot_text(14, 242, self.gps_time_line, scale=2, color=self.active, max_chars=34)
+        self._dot_text(12, 120, self.gps_line, scale=2, color=self.active, max_chars=36)
+        self._dot_text(12, 146, self.gps_time_line, scale=2, color=self.active, max_chars=36)
 
         # RC2: LNA/VGA values moved next to their sliders; receiver panel no longer draws gain text.
 
@@ -231,9 +232,9 @@ class RFILoggerApp(tk.Tk):
         self.after(100, lambda: enable_windows_dark_title_bar(self))
         # v0.1.23: use a safe default height and restore the last good size.
         # Earlier builds opened too short, hiding the GPS/action buttons.
-        saved_geometry = self.settings.get("window_geometry", "1120x900")
+        saved_geometry = self.settings.get("window_geometry", "1240x700")
         self.geometry(saved_geometry)
-        self.minsize(900, 620)
+        self.minsize(1180, 680)
         self._is_maximized = False
         self._normal_geometry = None
         self._drag_start_x = 0
@@ -323,51 +324,58 @@ class RFILoggerApp(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def _setup_styles(self):
-        self.configure(bg="#C8B889")
-        # Make dropdown lists readable in the CRT theme. Native ttk comboboxes
-        # otherwise keep a white listbox/background on Windows.
-        self.option_add("*TCombobox*Listbox.background", "#D6C79B")
-        self.option_add("*TCombobox*Listbox.foreground", "#4B2A74")
-        self.option_add("*TCombobox*Listbox.selectBackground", "#A99972")
-        self.option_add("*TCombobox*Listbox.selectForeground", "#5E3A8C")
+        """CDE-inspired inverse theme: purple background, beige foreground."""
+        self.theme_bg = "#4B2A74"
+        self.theme_panel = "#5E3A8C"
+        self.theme_display = "#3B235C"
+        self.theme_fg = "#F0E6C8"
+        self.theme_dim = "#B8A778"
+        self.theme_hi = "#D8C89D"
+        self.theme_border = "#C8B889"
+        self.theme_button = "#6F4AA0"
+        self.theme_active = "#F0E6C8"
+        self.theme_active_fg = "#4B2A74"
+
+        self.configure(bg=self.theme_bg)
+        self.option_add("*TCombobox*Listbox.background", self.theme_panel)
+        self.option_add("*TCombobox*Listbox.foreground", self.theme_fg)
+        self.option_add("*TCombobox*Listbox.selectBackground", self.theme_fg)
+        self.option_add("*TCombobox*Listbox.selectForeground", self.theme_bg)
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
         except Exception:
             pass
-        style.configure("CRT.TFrame", background="#C8B889")
-        style.configure("CRT.TLabel", background="#C8B889", foreground="#4B2A74", font=("Consolas", 10))
-        style.configure("AmberDebug.TLabel", background="#C8B889", foreground="#6B3FA0", font=("Consolas", 11, "bold"))
-        style.configure("CRTHeader.TLabel", background="#C8B889", foreground="#5E3A8C", font=("Consolas", 16, "bold"))
-        style.configure("CRTDisplay.TLabel", background="#D6C79B", foreground="#4B2A74", font=("Consolas", 30, "bold"), padding=4)
-        style.configure("CRTSmall.TLabel", background="#D6C79B", foreground="#4B2A74", font=("Consolas", 10))
-        style.configure("CRT.TLabelframe", background="#C8B889", foreground="#4B2A74", bordercolor="#6A4A8E")
-        style.configure("CRT.TLabelframe.Label", background="#C8B889", foreground="#5E3A8C", font=("Consolas", 10, "bold"))
-        style.configure("CRT.Horizontal.TProgressbar", troughcolor="#C8B889", background="#4B2A74", bordercolor="#6A4A8E", lightcolor="#4B2A74", darkcolor="#5E3A8C")
-        style.configure("TFrame", background="#C8B889")
-        style.configure("TLabel", background="#C8B889", foreground="#4B2A74", font=("Consolas", 10))
-        style.configure("TButton", background="#B9AA80", foreground="#5E3A8C", bordercolor="#6A4A8E", focusthickness=0)
-        style.map("TButton", background=[("active", "#B8A778")], foreground=[("active", "#F8F1D5")])
-        # Connection-state buttons: dark when inactive, illuminated when live.
-        style.configure("Active.TButton", background="#6F4AA0", foreground="#F0E6C8", bordercolor="#5E3A8C", focusthickness=0, font=("Consolas", 10, "bold"))
-        style.map("Active.TButton", background=[("active", "#7C56AC")], foreground=[("active", "#24143A")])
-        style.configure("Inactive.TButton", background="#B9AA80", foreground="#5E3A8C", bordercolor="#6A4A8E", focusthickness=0)
-        style.map("Inactive.TButton", background=[("active", "#B8A778")], foreground=[("active", "#F8F1D5")])
-        # Dedicated receiver mode buttons: selected mode looks like an
-        # illuminated field-instrument pushbutton.
-        style.configure("Mode.TButton", background="#B9AA80", foreground="#5E3A8C", bordercolor="#6A4A8E", focusthickness=0, font=("Consolas", 10, "bold"), padding=(8, 4))
-        style.map("Mode.TButton", background=[("active", "#AFA06F")], foreground=[("active", "#5E3A8C")])
-        style.configure("ModeActive.TButton", background="#6F4AA0", foreground="#F0E6C8", bordercolor="#5E3A8C", focusthickness=0, font=("Consolas", 10, "bold"), padding=(8, 4))
-        style.map("ModeActive.TButton", background=[("active", "#7C56AC")], foreground=[("active", "#24143A")])
-        style.configure("TCheckbutton", background="#C8B889", foreground="#4B2A74")
-        style.map("TCheckbutton", background=[("active", "#C8B889")], foreground=[("active", "#5E3A8C")])
-        style.configure("TEntry", fieldbackground="#D6C79B", foreground="#4B2A74", insertcolor="#4B2A74")
-        style.configure("TCombobox", fieldbackground="#D6C79B", foreground="#4B2A74", background="#B9AA80", arrowcolor="#4B2A74")
+        style.configure("CRT.TFrame", background=self.theme_bg)
+        style.configure("CRT.TLabel", background=self.theme_bg, foreground=self.theme_fg, font=("Consolas", 9))
+        style.configure("AmberDebug.TLabel", background=self.theme_bg, foreground=self.theme_hi, font=("Consolas", 9, "bold"))
+        style.configure("CRTHeader.TLabel", background=self.theme_bg, foreground=self.theme_hi, font=("Consolas", 14, "bold"))
+        style.configure("CRTDisplay.TLabel", background=self.theme_display, foreground=self.theme_fg, font=("Consolas", 26, "bold"), padding=3)
+        style.configure("CRTSmall.TLabel", background=self.theme_display, foreground=self.theme_fg, font=("Consolas", 9))
+        style.configure("CRT.TLabelframe", background=self.theme_bg, foreground=self.theme_fg, bordercolor=self.theme_border)
+        style.configure("CRT.TLabelframe.Label", background=self.theme_bg, foreground=self.theme_hi, font=("Consolas", 9, "bold"))
+        style.configure("CRT.Horizontal.TProgressbar", troughcolor=self.theme_display, background=self.theme_fg, bordercolor=self.theme_border, lightcolor=self.theme_fg, darkcolor=self.theme_dim)
+        style.configure("TFrame", background=self.theme_bg)
+        style.configure("TLabel", background=self.theme_bg, foreground=self.theme_fg, font=("Consolas", 9))
+        style.configure("TButton", background=self.theme_button, foreground=self.theme_fg, bordercolor=self.theme_border, focusthickness=0, font=("Consolas", 9))
+        style.map("TButton", background=[("active", self.theme_panel)], foreground=[("active", self.theme_hi)])
+        style.configure("Active.TButton", background=self.theme_active, foreground=self.theme_active_fg, bordercolor=self.theme_border, focusthickness=0, font=("Consolas", 9, "bold"))
+        style.map("Active.TButton", background=[("active", self.theme_hi)], foreground=[("active", self.theme_active_fg)])
+        style.configure("Inactive.TButton", background=self.theme_button, foreground=self.theme_fg, bordercolor=self.theme_border, focusthickness=0, font=("Consolas", 9))
+        style.map("Inactive.TButton", background=[("active", self.theme_panel)], foreground=[("active", self.theme_hi)])
+        style.configure("Mode.TButton", background=self.theme_button, foreground=self.theme_fg, bordercolor=self.theme_border, focusthickness=0, font=("Consolas", 9, "bold"), padding=(6, 3))
+        style.map("Mode.TButton", background=[("active", self.theme_panel)], foreground=[("active", self.theme_hi)])
+        style.configure("ModeActive.TButton", background=self.theme_active, foreground=self.theme_active_fg, bordercolor=self.theme_border, focusthickness=0, font=("Consolas", 9, "bold"), padding=(6, 3))
+        style.map("ModeActive.TButton", background=[("active", self.theme_hi)], foreground=[("active", self.theme_active_fg)])
+        style.configure("TCheckbutton", background=self.theme_bg, foreground=self.theme_fg, font=("Consolas", 9))
+        style.map("TCheckbutton", background=[("active", self.theme_bg)], foreground=[("active", self.theme_hi)])
+        style.configure("TEntry", fieldbackground=self.theme_display, foreground=self.theme_fg, insertcolor=self.theme_fg)
+        style.configure("TCombobox", fieldbackground=self.theme_display, foreground=self.theme_fg, background=self.theme_button, arrowcolor=self.theme_fg)
         style.map("TCombobox",
-                  fieldbackground=[("readonly", "#D6C79B")],
-                  foreground=[("readonly", "#4B2A74")],
-                  selectbackground=[("readonly", "#D6C79B")],
-                  selectforeground=[("readonly", "#4B2A74")])
+                  fieldbackground=[("readonly", self.theme_display)],
+                  foreground=[("readonly", self.theme_fg)],
+                  selectbackground=[("readonly", self.theme_display)],
+                  selectforeground=[("readonly", self.theme_fg)])
 
     def _available_com_ports(self):
         if list_ports is None:
@@ -466,14 +474,16 @@ class RFILoggerApp(tk.Tk):
 
 
     def _crt_scale(self, master, variable, from_, to, command=None):
-        """Theme-friendly Tk scale. ttk.Scale is hard to recolor on Windows."""
         return tk.Scale(
             master, from_=from_, to=to, orient="horizontal", variable=variable,
             command=command, showvalue=False, resolution=1,
-            bg="#C8B889", fg="#4B2A74", troughcolor="#B4A577",
-            activebackground="#4B2A74", highlightthickness=1,
-            highlightbackground="#6A4A8E", bd=1, sliderrelief="raised",
-            length=300
+            bg=getattr(self, "theme_bg", "#4B2A74"),
+            fg=getattr(self, "theme_fg", "#F0E6C8"),
+            troughcolor=getattr(self, "theme_display", "#3B235C"),
+            activebackground=getattr(self, "theme_fg", "#F0E6C8"),
+            highlightthickness=1,
+            highlightbackground=getattr(self, "theme_border", "#C8B889"),
+            bd=1, sliderrelief="raised", length=230
         )
 
     def _build_menu(self):
@@ -491,7 +501,7 @@ class RFILoggerApp(tk.Tk):
         """GPS configuration dialog moved out of the main field panel."""
         win = tk.Toplevel(self)
         win.title("GPS Settings")
-        win.configure(bg="#C8B889")
+        win.configure(bg=getattr(self, "theme_bg", "#4B2A74"))
         win.resizable(False, False)
         try:
             win.transient(self)
@@ -522,206 +532,161 @@ class RFILoggerApp(tk.Tk):
     def _build_ui(self):
         self._build_menu()
 
-        # RC4: make the main UI usable on lower-resolution screens.  The
-        # working area scrolls vertically when the screen cannot show all
-        # panels at once, while keeping the existing field-instrument layout
-        # intact on larger displays.
-        outer = ttk.Frame(self, style="CRT.TFrame")
-        outer.pack(fill="both", expand=True)
-
-        self._main_canvas = tk.Canvas(outer, bg="#C8B889", highlightthickness=0, bd=0)
-        self._main_vscroll = ttk.Scrollbar(outer, orient="vertical", command=self._main_canvas.yview)
-        self._main_canvas.configure(yscrollcommand=self._main_vscroll.set)
-        self._main_canvas.pack(side="left", fill="both", expand=True)
-        self._main_vscroll.pack(side="right", fill="y")
-
-        root = ttk.Frame(self._main_canvas, padding=12, style="CRT.TFrame")
-        self._main_window_id = self._main_canvas.create_window((0, 0), window=root, anchor="nw")
-
-        def _sync_scroll_region(event=None):
-            try:
-                self._main_canvas.configure(scrollregion=self._main_canvas.bbox("all"))
-            except Exception:
-                pass
-
-        def _sync_canvas_width(event=None):
-            try:
-                self._main_canvas.itemconfigure(self._main_window_id, width=event.width)
-            except Exception:
-                pass
-
-        def _mousewheel(event):
-            try:
-                if event.num == 4:
-                    delta = -1
-                elif event.num == 5:
-                    delta = 1
-                else:
-                    delta = int(-1 * (event.delta / 120))
-                self._main_canvas.yview_scroll(delta, "units")
-            except Exception:
-                pass
-
-        root.bind("<Configure>", _sync_scroll_region)
-        self._main_canvas.bind("<Configure>", _sync_canvas_width)
-        self._main_canvas.bind_all("<MouseWheel>", _mousewheel)
-        self._main_canvas.bind_all("<Button-4>", _mousewheel)
-        self._main_canvas.bind_all("<Button-5>", _mousewheel)
+        # RC5: no scrollbar. Two-column adaptive layout fits 1280x720 and
+        # expands on larger screens while keeping the receiver panel prominent.
+        root = ttk.Frame(self, padding=6, style="CRT.TFrame")
+        root.pack(fill="both", expand=True)
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(1, weight=1)
 
         top = ttk.Frame(root, style="CRT.TFrame")
-        top.pack(fill="x")
+        top.grid(row=0, column=0, sticky="ew")
         ttk.Label(top, text=f"{APP_NAME} v{APP_VERSION}", style="CRTHeader.TLabel").pack(side="left")
 
-        panel = ttk.LabelFrame(root, text="Receiver Panel", style="CRT.TLabelframe")
-        panel.pack(fill="x", pady=10)
-        freq_frame = ttk.Frame(panel, padding=10, style="CRT.TFrame")
+        body = ttk.Frame(root, style="CRT.TFrame")
+        body.grid(row=1, column=0, sticky="nsew", pady=(4, 0))
+        # RC7: equal columns prevent the receiver panel from consuming too much horizontal space.
+        body.columnconfigure(0, weight=1, uniform="main")
+        body.columnconfigure(1, weight=1, uniform="main")
+        body.rowconfigure(0, weight=1)
+
+        left = ttk.Frame(body, style="CRT.TFrame")
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        right = ttk.Frame(body, style="CRT.TFrame")
+        right.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
+
+        panel = ttk.LabelFrame(left, text="Receiver Panel", style="CRT.TLabelframe")
+        panel.pack(fill="x", expand=False)
+        freq_frame = ttk.Frame(panel, padding=(8, 6, 8, 4), style="CRT.TFrame")
         freq_frame.pack(fill="x")
         ttk.Label(freq_frame, text="Frequency MHz:").grid(row=0, column=0, sticky="w")
-        self.freq_entry = ttk.Entry(freq_frame, textvariable=self.freq_var, width=16, font=("Consolas", 18, "bold"))
-        self.freq_entry.grid(row=0, column=1, padx=8)
+        self.freq_entry = ttk.Entry(freq_frame, textvariable=self.freq_var, width=15, font=("Consolas", 15, "bold"))
+        self.freq_entry.grid(row=0, column=1, padx=6, sticky="w")
         self.freq_entry.bind("<Return>", lambda e: self.tune_from_entry())
         self.freq_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
-        # RC2: ENTER tunes; Tune button removed.
-        # v0.1.43: replace dropdown with radio-like mode pushbuttons.
-        # This is faster in the field and avoids the light dropdown list that
-        # did not match the instrument theme on some Windows systems.
-        ttk.Label(freq_frame, text="Mode:").grid(row=0, column=3, padx=(20, 4))
-        self.mode_button_frame = ttk.Frame(freq_frame, style="CRT.TFrame")
-        self.mode_button_frame.grid(row=0, column=4, columnspan=5, sticky="w")
+        ttk.Label(freq_frame, text="PPM:").grid(row=0, column=2, sticky="e", padx=(12, 4))
+        self.ppm_entry = ttk.Entry(freq_frame, textvariable=self.ppm_correction_var, width=8)
+        self.ppm_entry.grid(row=0, column=3, sticky="w")
+        self.ppm_entry.bind("<Return>", lambda e: self.tune_from_entry())
+        self.ppm_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
+        freq_frame.columnconfigure(4, weight=1)
+
+        self.dot_panel = DotMatrixPanel(panel)
+        self.dot_panel.pack(fill="x", expand=False, padx=8, pady=(2, 6))
+
+        steps = ttk.Frame(panel, padding=(8, 0, 8, 6), style="CRT.TFrame")
+        steps.pack(fill="x")
+        for label, step in [("-1M", -1_000_000), ("-100k", -100_000), ("-10k", -10_000), ("+10k", 10_000), ("+100k", 100_000), ("+1M", 1_000_000)]:
+            ttk.Button(steps, text=label, command=lambda s=step: self.step_frequency(s)).pack(side="left", padx=2)
+
+        # RC8: keep all mode buttons visible at 1280x720 by moving them
+        # under the frequency controls and using a compact two-row grid.
+        mode_panel = ttk.LabelFrame(left, text="Mode / SDR", style="CRT.TLabelframe")
+        mode_panel.pack(fill="x", pady=(4, 0))
+        self.mode_button_frame = ttk.Frame(mode_panel, padding=(8, 6, 8, 2), style="CRT.TFrame")
+        self.mode_button_frame.pack(fill="x")
         self.mode_buttons = {}
-        for mode in ["AM", "NFM", "WFM", "USB", "LSB", "CW-U", "CW-L"]:
+        for idx, mode in enumerate(["AM", "NFM", "WFM", "USB", "LSB", "CW-U", "CW-L"]):
             btn = ttk.Button(
                 self.mode_button_frame,
                 text=mode,
                 style="Mode.TButton",
                 command=lambda m=mode: self.set_mode(m),
             )
-            btn.pack(side="left", padx=2)
+            btn.grid(row=idx // 4, column=idx % 4, padx=3, pady=2, sticky="ew")
+            self.mode_button_frame.columnconfigure(idx % 4, weight=1)
             self.mode_buttons[mode] = btn
         self._update_mode_buttons()
-        ttk.Label(freq_frame, text="PPM Correction:").grid(row=1, column=0, sticky="w", pady=(6,0))
-        self.ppm_entry = ttk.Entry(freq_frame, textvariable=self.ppm_correction_var, width=10)
-        self.ppm_entry.grid(row=1, column=1, sticky="w", padx=8, pady=(6,0))
-        self.ppm_entry.bind("<Return>", lambda e: self.tune_from_entry())
-        self.ppm_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
-        self.connect_sdr_button = ttk.Button(freq_frame, text="Connect / Refresh SDR", command=self.connect_radio, style="Inactive.TButton")
-        self.connect_sdr_button.grid(row=1, column=4, sticky="w", padx=(4,0), pady=(6,0))
+        sdr_row = ttk.Frame(mode_panel, padding=(8, 2, 8, 8), style="CRT.TFrame")
+        sdr_row.pack(fill="x")
+        ttk.Label(sdr_row, text="SDR:").pack(side="left")
+        self.device_combo = ttk.Combobox(sdr_row, textvariable=self.device_type_var, values=["HackRF", "RTL-SDR", "SDRplay"], width=10, state="readonly")
+        self.device_combo.pack(side="left", padx=4)
+        self.device_combo.bind("<<ComboboxSelected>>", lambda e: self.on_device_changed())
+        self.connect_sdr_button = ttk.Button(sdr_row, text="Connect / Refresh SDR", command=self.connect_radio, style="Inactive.TButton")
+        self.connect_sdr_button.pack(side="left", padx=(6, 0))
 
-        self.dot_panel = DotMatrixPanel(panel)
-        self.dot_panel.pack(fill="x", padx=10, pady=(4, 8))
+        controls = ttk.LabelFrame(right, text="SDR Controls", style="CRT.TLabelframe")
+        controls.pack(fill="x", pady=4)
+        row1 = ttk.Frame(controls, padding=(8, 6, 8, 2), style="CRT.TFrame")
+        row1.pack(fill="x")
+        self.lna_label = ttk.Label(row1, text="LNA")
+        self.lna_label.grid(row=0, column=0, sticky="w")
+        self._crt_scale(row1, self.lna_var, 0, 40, command=lambda e: self.on_gain_slider_changed()).grid(row=0, column=1, sticky="ew", padx=5)
+        ttk.Label(row1, textvariable=self.lna_value_var, width=6).grid(row=0, column=2, padx=2)
+        ttk.Label(row1, text="VGA").grid(row=1, column=0, sticky="w", pady=(4,0))
+        self._crt_scale(row1, self.vga_var, 0, 62, command=lambda e: self.on_gain_slider_changed()).grid(row=1, column=1, sticky="ew", padx=5, pady=(4,0))
+        ttk.Label(row1, textvariable=self.vga_value_var, width=6).grid(row=1, column=2, padx=2, pady=(4,0))
+        row1.columnconfigure(1, weight=1)
+        btn_row = ttk.Frame(controls, padding=(8, 2, 8, 4), style="CRT.TFrame")
+        btn_row.pack(fill="x")
+        ttk.Checkbutton(btn_row, text="AMP", variable=self.amp_var, command=self.apply_gains).pack(side="left", padx=4)
+        self.atten_button = ttk.Button(btn_row, text="ATT -10dB", command=self.toggle_10db_attenuation, style="Inactive.TButton")
+        self.atten_button.pack(side="left", padx=4)
+        self._update_atten_button()
+        ttk.Checkbutton(btn_row, text="DC", variable=self.dc_var).pack(side="left", padx=4)
+        ttk.Checkbutton(btn_row, text="IQ", variable=self.iq_var).pack(side="left", padx=4)
 
-        steps = ttk.Frame(panel, padding=(10, 0, 10, 8), style="CRT.TFrame")
-        steps.pack(fill="x")
-        for label, step in [("-1M", -1_000_000), ("-100k", -100_000), ("-10k", -10_000), ("+10k", 10_000), ("+100k", 100_000), ("+1M", 1_000_000)]:
-            ttk.Button(steps, text=label, command=lambda s=step: self.step_frequency(s)).pack(side="left", padx=2)
+        row2 = ttk.Frame(controls, padding=(8, 2, 8, 8), style="CRT.TFrame")
+        row2.pack(fill="x")
+        ttk.Checkbutton(row2, text="Audio Monitor", variable=self.audio_enabled_var, command=self.toggle_audio).pack(side="left")
+        ttk.Label(row2, text="Volume").pack(side="left", padx=(10, 4))
+        self._crt_scale(row2, self.volume_var, 0, 100, command=lambda e: self.update_audio_params()).pack(side="left", fill="x", expand=True, padx=4)
+        self.audio_status_var = tk.StringVar(value="Audio: OFF")
 
-        log_panel = ttk.LabelFrame(root, text="Logging Status", style="CRT.TLabelframe")
-        log_panel.pack(fill="x", pady=6)
-        ttk.Label(log_panel, textvariable=self.logging_panel_var, font=("Consolas", 18, "bold")).pack(pady=(8, 2))
-        ttk.Label(log_panel, textvariable=self.logging_detail_var, font=("Consolas", 10)).pack(pady=(0, 4))
+        log_panel = ttk.LabelFrame(right, text="Logging Status", style="CRT.TLabelframe")
+        log_panel.pack(fill="x", pady=4)
+        ttk.Label(log_panel, textvariable=self.logging_panel_var, font=("Consolas", 14, "bold")).pack(pady=(6, 1))
+        ttk.Label(log_panel, textvariable=self.logging_detail_var, font=("Consolas", 9)).pack(pady=(0, 3))
+        log_buttons = ttk.Frame(log_panel, style="CRT.TFrame")
+        log_buttons.pack(pady=(0, 4))
+        ttk.Button(log_buttons, text="Start Logging", command=self.start_logging).pack(side="left", padx=3)
+        ttk.Button(log_buttons, text="Stop Logging", command=self.stop_logging).pack(side="left", padx=3)
+        ttk.Button(log_buttons, text="Save KML", command=self.save_kml).pack(side="left", padx=3)
         log_opts = ttk.Frame(log_panel, style="CRT.TFrame")
-        log_opts.pack(pady=(0, 8))
-        ttk.Label(log_opts, text="Log interval:").pack(side="left", padx=(0, 4))
+        log_opts.pack(fill="x", padx=8, pady=(0, 6))
+        ttk.Label(log_opts, text="Interval").grid(row=0, column=0, sticky="w")
         self.log_interval_combo = ttk.Combobox(
             log_opts,
             textvariable=self.log_interval_var,
             values=["0.5", "1", "2", "5", "10", "30"],
-            width=6,
+            width=5,
             state="readonly",
         )
-        self.log_interval_combo.pack(side="left")
-        ttk.Label(log_opts, text="seconds").pack(side="left", padx=(4, 18))
+        self.log_interval_combo.grid(row=0, column=1, padx=(4, 12), sticky="w")
         self.log_interval_combo.bind("<<ComboboxSelected>>", lambda e: self.on_log_interval_changed())
-        log_buttons = ttk.Frame(log_panel, style="CRT.TFrame")
-        log_buttons.pack(pady=(0, 8))
-        ttk.Button(log_buttons, text="Start Logging", command=self.start_logging).pack(side="left", padx=4)
-        ttk.Button(log_buttons, text="Stop Logging", command=self.stop_logging).pack(side="left", padx=4)
-        ttk.Button(log_buttons, text="Save KML", command=self.save_kml).pack(side="left", padx=4)
-        ttk.Label(log_opts, text="KML dBFS bands: Green <").pack(side="left")
-        ttk.Entry(log_opts, textvariable=self.kml_green_below_var, width=6).pack(side="left", padx=(3, 6))
-        ttk.Label(log_opts, text="Yellow <").pack(side="left")
-        ttk.Entry(log_opts, textvariable=self.kml_yellow_below_var, width=6).pack(side="left", padx=(3, 6))
-        ttk.Label(log_opts, text="Orange <").pack(side="left")
-        ttk.Entry(log_opts, textvariable=self.kml_orange_below_var, width=6).pack(side="left", padx=(3, 10))
-        ttk.Checkbutton(log_opts, text="KML signal text", variable=self.kml_signal_labels_var).pack(side="left", padx=(4, 0))
+        ttk.Checkbutton(log_opts, text="KML text", variable=self.kml_signal_labels_var).grid(row=0, column=2, sticky="w")
+        ttk.Label(log_opts, text="Bands G<").grid(row=1, column=0, sticky="w", pady=(4,0))
+        ttk.Entry(log_opts, textvariable=self.kml_green_below_var, width=6).grid(row=1, column=1, sticky="w", pady=(4,0))
+        ttk.Label(log_opts, text="Y<").grid(row=1, column=2, sticky="e", pady=(4,0))
+        ttk.Entry(log_opts, textvariable=self.kml_yellow_below_var, width=6).grid(row=1, column=3, sticky="w", pady=(4,0))
+        ttk.Label(log_opts, text="O<").grid(row=1, column=4, sticky="e", pady=(4,0))
+        ttk.Entry(log_opts, textvariable=self.kml_orange_below_var, width=6).grid(row=1, column=5, sticky="w", pady=(4,0))
 
-        controls = ttk.LabelFrame(root, text="SDR Controls", style="CRT.TLabelframe")
-        controls.pack(fill="x", pady=6)
-        row0 = ttk.Frame(controls, padding=(8, 8, 8, 0))
-        row0.pack(fill="x")
-        ttk.Label(row0, text="SDR Device:").pack(side="left")
-        self.device_combo = ttk.Combobox(row0, textvariable=self.device_type_var, values=["HackRF", "RTL-SDR", "SDRplay"], width=12, state="readonly")
-        self.device_combo.pack(side="left", padx=6)
-        self.device_combo.bind("<<ComboboxSelected>>", lambda e: self.on_device_changed())
         self.sdrplay_map_var = tk.StringVar(value="MAP: --")
-        self.sdrplay_map_label = ttk.Label(row0, textvariable=self.sdrplay_map_var, style="AmberDebug.TLabel", font=("Consolas", 10, "bold"))
         self.sdrplay_debug_var = tk.StringVar(value="SDRPLAY DEBUG: --")
-        self.sdrplay_debug_label = ttk.Label(row0, textvariable=self.sdrplay_debug_var, style="AmberDebug.TLabel", font=("Consolas", 9, "bold"))
-        self._debug_widgets = [self.sdrplay_map_label, self.sdrplay_debug_label]
-        # Debug widgets are hidden by default in v0.5.10; they can be re-enabled in a future diagnostic build.
-        for _w in self._debug_widgets:
-            try:
-                _w.pack_forget()
-            except Exception:
-                pass
-
-        row1 = ttk.Frame(controls, padding=8)
-        row1.pack(fill="x")
-        self.lna_label = ttk.Label(row1, text="LNA")
-        self.lna_label.grid(row=0, column=0, sticky="w")
-        self._crt_scale(row1, self.lna_var, 0, 40, command=lambda e: self.on_gain_slider_changed()).grid(row=0, column=1, sticky="ew", padx=6)
-        ttk.Label(row1, textvariable=self.lna_value_var, width=8).grid(row=0, column=2, padx=4)
-        ttk.Label(row1, text="VGA").grid(row=1, column=0, sticky="w", pady=(6,0))
-        self._crt_scale(row1, self.vga_var, 0, 62, command=lambda e: self.on_gain_slider_changed()).grid(row=1, column=1, sticky="ew", padx=6, pady=(6,0))
-        ttk.Label(row1, textvariable=self.vga_value_var, width=8).grid(row=1, column=2, padx=4, pady=(6,0))
-        row1.columnconfigure(1, weight=1)
-        self.atten_button = ttk.Button(row1, text="ATT -10dB", command=self.toggle_10db_attenuation, style="Inactive.TButton")
-        self.atten_button.grid(row=0, column=3, padx=12)
-        self._update_atten_button()
-        ttk.Checkbutton(row1, text="AMP", variable=self.amp_var, command=self.apply_gains).grid(row=0, column=4, padx=6)
-        ttk.Checkbutton(row1, text="DC", variable=self.dc_var).grid(row=0, column=5, padx=6)
-        ttk.Checkbutton(row1, text="IQ", variable=self.iq_var).grid(row=0, column=6, padx=6)
-
-        row2 = ttk.Frame(controls, padding=(8, 0, 8, 8))
-        row2.pack(fill="x")
-        ttk.Checkbutton(row2, text="Audio Monitor", variable=self.audio_enabled_var, command=self.toggle_audio).pack(side="left")
-        ttk.Label(row2, text="Volume").pack(side="left", padx=(18, 4))
-        self._crt_scale(row2, self.volume_var, 0, 100, command=lambda e: self.update_audio_params()).pack(side="left", fill="x", expand=True, padx=4)
-        self.audio_status_var = tk.StringVar(value="Audio: OFF")
-        # v0.1.38: AUDIO LED removed. The field tool now uses the
-        # receiver-panel signal bargraph as the primary activity indicator.
-
-        # RC2: GPS configuration moved to Settings > GPS Settings.
-        # RC2: action buttons moved near their functional panels; bottom status text removed.
+        self._debug_widgets = []
         self.status = StatusSink()
 
-
     def _fit_window_to_content(self):
-        """Open large enough for normal use, but never larger than the screen.
-
-        RC4 changed the main area to a vertical scroller, so smaller laptops no
-        longer need a huge fixed minimum height.
-        """
+        """Fit the main layout to 1280x720-class screens without scrollbars."""
         try:
             self.update_idletasks()
             screen_w = self.winfo_screenwidth()
             screen_h = self.winfo_screenheight()
-            req_w = max(min(self.winfo_reqwidth(), screen_w - 80), 900)
-            req_h = max(min(self.winfo_reqheight(), screen_h - 120), 620)
-            fit_w = min(req_w, max(900, screen_w - 80))
-            fit_h = min(req_h, max(620, screen_h - 120))
-
+            target_w = min(1280, max(1180, screen_w - 40))
+            target_h = min(720, max(680, screen_h - 60))
             geom = str(self.settings.get("window_geometry", ""))
             if "+" in geom:
                 parts = geom.split("+")
                 if len(parts) >= 3:
-                    self.geometry(f"{int(fit_w)}x{int(fit_h)}+{parts[1]}+{parts[2]}")
+                    self.geometry(f"{int(target_w)}x{int(target_h)}+{parts[1]}+{parts[2]}")
                     return
-            x = max(0, int((screen_w - fit_w) / 2))
-            y = max(0, int((screen_h - fit_h) / 2))
-            self.geometry(f"{int(fit_w)}x{int(fit_h)}+{x}+{y}")
+            x = max(0, int((screen_w - target_w) / 2))
+            y = max(0, int((screen_h - target_h) / 2))
+            self.geometry(f"{int(target_w)}x{int(target_h)}+{x}+{y}")
         except Exception:
-            self.geometry("1000x700")
+            self.geometry("1280x720")
 
     def _schedule_update_loop(self, delay_ms=40):
         if getattr(self, "_closing", False):
