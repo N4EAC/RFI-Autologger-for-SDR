@@ -5,7 +5,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m PyInstaller --onefile --windowed ^
   --icon rfi_auto_logger_sdr.ico ^
-  --name RFI_Autologger_for_SDR_by_N4EAC_v1.0.0-rc2 ^
+  --name RFI_Autologger_for_SDR_by_N4EAC_v1.0.0-rc4 ^
   --add-binary "hackrf.dll;." ^
   --add-binary "libusb-1.0.dll;." ^
   --add-binary "pthreadVC2.dll;." ^

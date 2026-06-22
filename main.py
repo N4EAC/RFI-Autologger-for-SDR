@@ -233,7 +233,7 @@ class RFILoggerApp(tk.Tk):
         # Earlier builds opened too short, hiding the GPS/action buttons.
         saved_geometry = self.settings.get("window_geometry", "1120x900")
         self.geometry(saved_geometry)
-        self.minsize(1120, 880)
+        self.minsize(900, 620)
         self._is_maximized = False
         self._normal_geometry = None
         self._drag_start_x = 0
@@ -521,8 +521,52 @@ class RFILoggerApp(tk.Tk):
 
     def _build_ui(self):
         self._build_menu()
-        root = ttk.Frame(self, padding=12, style="CRT.TFrame")
-        root.pack(fill="both", expand=True)
+
+        # RC4: make the main UI usable on lower-resolution screens.  The
+        # working area scrolls vertically when the screen cannot show all
+        # panels at once, while keeping the existing field-instrument layout
+        # intact on larger displays.
+        outer = ttk.Frame(self, style="CRT.TFrame")
+        outer.pack(fill="both", expand=True)
+
+        self._main_canvas = tk.Canvas(outer, bg="#C8B889", highlightthickness=0, bd=0)
+        self._main_vscroll = ttk.Scrollbar(outer, orient="vertical", command=self._main_canvas.yview)
+        self._main_canvas.configure(yscrollcommand=self._main_vscroll.set)
+        self._main_canvas.pack(side="left", fill="both", expand=True)
+        self._main_vscroll.pack(side="right", fill="y")
+
+        root = ttk.Frame(self._main_canvas, padding=12, style="CRT.TFrame")
+        self._main_window_id = self._main_canvas.create_window((0, 0), window=root, anchor="nw")
+
+        def _sync_scroll_region(event=None):
+            try:
+                self._main_canvas.configure(scrollregion=self._main_canvas.bbox("all"))
+            except Exception:
+                pass
+
+        def _sync_canvas_width(event=None):
+            try:
+                self._main_canvas.itemconfigure(self._main_window_id, width=event.width)
+            except Exception:
+                pass
+
+        def _mousewheel(event):
+            try:
+                if event.num == 4:
+                    delta = -1
+                elif event.num == 5:
+                    delta = 1
+                else:
+                    delta = int(-1 * (event.delta / 120))
+                self._main_canvas.yview_scroll(delta, "units")
+            except Exception:
+                pass
+
+        root.bind("<Configure>", _sync_scroll_region)
+        self._main_canvas.bind("<Configure>", _sync_canvas_width)
+        self._main_canvas.bind_all("<MouseWheel>", _mousewheel)
+        self._main_canvas.bind_all("<Button-4>", _mousewheel)
+        self._main_canvas.bind_all("<Button-5>", _mousewheel)
 
         top = ttk.Frame(root, style="CRT.TFrame")
         top.pack(fill="x")
@@ -653,20 +697,22 @@ class RFILoggerApp(tk.Tk):
 
 
     def _fit_window_to_content(self):
-        """Open large enough for all controls while staying on screen."""
+        """Open large enough for normal use, but never larger than the screen.
+
+        RC4 changed the main area to a vertical scroller, so smaller laptops no
+        longer need a huge fixed minimum height.
+        """
         try:
             self.update_idletasks()
-            req_w = max(self.winfo_reqwidth(), 1120)
-            req_h = max(self.winfo_reqheight(), 880)
             screen_w = self.winfo_screenwidth()
             screen_h = self.winfo_screenheight()
-            # Leave room for the Windows taskbar and borders.
-            fit_w = min(req_w, max(1120, screen_w - 80))
-            fit_h = min(req_h, max(880, screen_h - 120))
-            # Preserve user's saved position if present, otherwise center.
+            req_w = max(min(self.winfo_reqwidth(), screen_w - 80), 900)
+            req_h = max(min(self.winfo_reqheight(), screen_h - 120), 620)
+            fit_w = min(req_w, max(900, screen_w - 80))
+            fit_h = min(req_h, max(620, screen_h - 120))
+
             geom = str(self.settings.get("window_geometry", ""))
             if "+" in geom:
-                # Keep saved origin but correct the size.
                 parts = geom.split("+")
                 if len(parts) >= 3:
                     self.geometry(f"{int(fit_w)}x{int(fit_h)}+{parts[1]}+{parts[2]}")
@@ -675,7 +721,7 @@ class RFILoggerApp(tk.Tk):
             y = max(0, int((screen_h - fit_h) / 2))
             self.geometry(f"{int(fit_w)}x{int(fit_h)}+{x}+{y}")
         except Exception:
-            self.geometry("1120x900")
+            self.geometry("1000x700")
 
     def _schedule_update_loop(self, delay_ms=40):
         if getattr(self, "_closing", False):
