@@ -109,12 +109,12 @@ class StatusSink:
 
 class DotMatrixPanel(tk.Canvas):
     def __init__(self, master, **kwargs):
-        super().__init__(master, bg="#1A151D", highlightthickness=1, highlightbackground="#C8B889", bd=0, height=170, **kwargs)
+        super().__init__(master, bg="#141018", highlightthickness=1, highlightbackground="#C8B889", bd=0, height=108, **kwargs)
         # RC6: keep the overall purple/beige CDE theme, but make the
         # receiver dot-matrix display a dark recessed instrument panel so
         # live data remains readable on lower-resolution screens.
         self.active = "#F0E6C8"
-        self.dim = "#3F3548"
+        self.dim = "#3A3140"
         self.glow = "#F6C86A"
         self.freq_text = "132.000000"
         self.mode_text = "AM"
@@ -196,23 +196,23 @@ class DotMatrixPanel(tk.Canvas):
     def redraw(self):
         self.delete("all")
         w = max(520, self.winfo_width())
-        h = max(170, self.winfo_height())
+        h = max(108, self.winfo_height())
         for yy in range(0, h, 4):
             self.create_line(0, yy, w, yy, fill="#241D29")
 
         # v0.1.23: spectrum removed.  The panel is now a lighter CRT
         # instrument display focused on frequency, mode, and signal only.
         # RC7: compact receiver display so the full UI fits 1280x720-class screens.
-        self._dot_text(12, 10, "FREQ", scale=2)
-        self._dot_text(86, 6, self.freq_text, scale=4, spacing=2, color=self.glow, max_chars=12)
-        self._dot_text(12, 58, f"MODE {self.mode_text}", scale=2)
+        # RC11: uniform compact rows.  Keep the CRT look but avoid pixel overlap.
+        self._dot_text(12, 8, f"FREQ {self.freq_text}", scale=2, spacing=1, color=self.glow, max_chars=22)
+        self._dot_text(12, 30, f"MODE {self.mode_text}", scale=2, spacing=1, color=self.active, max_chars=18)
 
         # Numeric tuned-channel signal value used for CSV/KML mapping.
-        self._dot_text(12, 88, f"SIGNAL {self.dbfs:.1f} dBFS", scale=2, color=self.glow, max_chars=28)
+        self._dot_text(12, 52, f"SIGNAL {self.dbfs:.1f} dBFS", scale=2, spacing=1, color=self.glow, max_chars=28)
 
         # GPS readout in the receiver panel.
-        self._dot_text(12, 120, self.gps_line, scale=2, color=self.active, max_chars=36)
-        self._dot_text(12, 146, self.gps_time_line, scale=2, color=self.active, max_chars=36)
+        self._dot_text(12, 74, self.gps_line, scale=2, spacing=1, color=self.active, max_chars=36)
+        self._dot_text(12, 92, self.gps_time_line, scale=2, spacing=1, color=self.active, max_chars=36)
 
         # RC2: LNA/VGA values moved next to their sliders; receiver panel no longer draws gain text.
 
@@ -232,9 +232,9 @@ class RFILoggerApp(tk.Tk):
         self.after(100, lambda: enable_windows_dark_title_bar(self))
         # v0.1.23: use a safe default height and restore the last good size.
         # Earlier builds opened too short, hiding the GPS/action buttons.
-        saved_geometry = self.settings.get("window_geometry", "1240x700")
+        saved_geometry = self.settings.get("window_geometry", "1280x460")
         self.geometry(saved_geometry)
-        self.minsize(1180, 680)
+        self.minsize(1120, 440)
         self._is_maximized = False
         self._normal_geometry = None
         self._drag_start_x = 0
@@ -325,16 +325,16 @@ class RFILoggerApp(tk.Tk):
 
     def _setup_styles(self):
         """CDE-inspired inverse theme: purple background, beige foreground."""
-        self.theme_bg = "#4B2A74"
-        self.theme_panel = "#5E3A8C"
-        self.theme_display = "#3B235C"
+        self.theme_bg = "#2B1846"
+        self.theme_panel = "#3D2560"
+        self.theme_display = "#19151F"
         self.theme_fg = "#F0E6C8"
         self.theme_dim = "#B8A778"
         self.theme_hi = "#D8C89D"
         self.theme_border = "#C8B889"
-        self.theme_button = "#6F4AA0"
+        self.theme_button = "#4D3272"
         self.theme_active = "#F0E6C8"
-        self.theme_active_fg = "#4B2A74"
+        self.theme_active_fg = "#2B1846"
 
         self.configure(bg=self.theme_bg)
         self.option_add("*TCombobox*Listbox.background", self.theme_panel)
@@ -352,6 +352,9 @@ class RFILoggerApp(tk.Tk):
         style.configure("CRTHeader.TLabel", background=self.theme_bg, foreground=self.theme_hi, font=("Consolas", 14, "bold"))
         style.configure("CRTDisplay.TLabel", background=self.theme_display, foreground=self.theme_fg, font=("Consolas", 26, "bold"), padding=3)
         style.configure("CRTSmall.TLabel", background=self.theme_display, foreground=self.theme_fg, font=("Consolas", 9))
+        style.configure("ReceiverDisplay.TFrame", background=self.theme_display)
+        style.configure("ReceiverDisplay.TLabel", background=self.theme_display, foreground=self.theme_fg, font=("Consolas", 13, "bold"))
+        style.configure("ReceiverDisplaySmall.TLabel", background=self.theme_display, foreground=self.theme_dim, font=("Consolas", 11, "bold"))
         style.configure("CRT.TLabelframe", background=self.theme_bg, foreground=self.theme_fg, bordercolor=self.theme_border)
         style.configure("CRT.TLabelframe.Label", background=self.theme_bg, foreground=self.theme_hi, font=("Consolas", 9, "bold"))
         style.configure("CRT.Horizontal.TProgressbar", troughcolor=self.theme_display, background=self.theme_fg, bordercolor=self.theme_border, lightcolor=self.theme_fg, darkcolor=self.theme_dim)
@@ -410,7 +413,7 @@ class RFILoggerApp(tk.Tk):
         title_tab.pack(side="left", padx=(10, 4), pady=3)
 
         status = tk.Label(
-            bar, text="HACKRF FIELD RECEIVER", bg="#111C11", fg="#4B2A74",
+            bar, text="HACKRF FIELD RECEIVER", bg="#111C11", fg="#2B1846",
             font=("Consolas", 9)
         )
         status.pack(side="left", padx=8)
@@ -477,9 +480,9 @@ class RFILoggerApp(tk.Tk):
         return tk.Scale(
             master, from_=from_, to=to, orient="horizontal", variable=variable,
             command=command, showvalue=False, resolution=1,
-            bg=getattr(self, "theme_bg", "#4B2A74"),
+            bg=getattr(self, "theme_bg", "#2B1846"),
             fg=getattr(self, "theme_fg", "#F0E6C8"),
-            troughcolor=getattr(self, "theme_display", "#3B235C"),
+            troughcolor=getattr(self, "theme_display", "#19151F"),
             activebackground=getattr(self, "theme_fg", "#F0E6C8"),
             highlightthickness=1,
             highlightbackground=getattr(self, "theme_border", "#C8B889"),
@@ -501,7 +504,7 @@ class RFILoggerApp(tk.Tk):
         """GPS configuration dialog moved out of the main field panel."""
         win = tk.Toplevel(self)
         win.title("GPS Settings")
-        win.configure(bg=getattr(self, "theme_bg", "#4B2A74"))
+        win.configure(bg=getattr(self, "theme_bg", "#2B1846"))
         win.resizable(False, False)
         try:
             win.transient(self)
@@ -557,22 +560,33 @@ class RFILoggerApp(tk.Tk):
 
         panel = ttk.LabelFrame(left, text="Receiver Panel", style="CRT.TLabelframe")
         panel.pack(fill="x", expand=False)
-        freq_frame = ttk.Frame(panel, padding=(8, 6, 8, 4), style="CRT.TFrame")
+        freq_frame = ttk.Frame(panel, padding=(8, 4, 8, 2), style="CRT.TFrame")
         freq_frame.pack(fill="x")
         ttk.Label(freq_frame, text="Frequency MHz:").grid(row=0, column=0, sticky="w")
-        self.freq_entry = ttk.Entry(freq_frame, textvariable=self.freq_var, width=15, font=("Consolas", 15, "bold"))
+        self.freq_entry = ttk.Entry(freq_frame, textvariable=self.freq_var, width=20, font=("Consolas", 15, "bold"))
         self.freq_entry.grid(row=0, column=1, padx=6, sticky="w")
         self.freq_entry.bind("<Return>", lambda e: self.tune_from_entry())
         self.freq_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
-        ttk.Label(freq_frame, text="PPM:").grid(row=0, column=2, sticky="e", padx=(12, 4))
-        self.ppm_entry = ttk.Entry(freq_frame, textvariable=self.ppm_correction_var, width=8)
-        self.ppm_entry.grid(row=0, column=3, sticky="w")
-        self.ppm_entry.bind("<Return>", lambda e: self.tune_from_entry())
-        self.ppm_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
-        freq_frame.columnconfigure(4, weight=1)
+        ttk.Label(freq_frame, text="Press ENTER to tune", style="CRTSmall.TLabel").grid(row=0, column=2, sticky="w", padx=(10, 0))
+        freq_frame.columnconfigure(3, weight=1)
 
-        self.dot_panel = DotMatrixPanel(panel)
-        self.dot_panel.pack(fill="x", expand=False, padx=8, pady=(2, 6))
+        # RC12: replace cramped dot-matrix canvas with a clean, simple
+        # instrument display using normal fonts.  This avoids pixel overlap
+        # and keeps the UI professional and readable.
+        self.receiver_display = ttk.Frame(panel, padding=(10, 8, 10, 8), style="ReceiverDisplay.TFrame")
+        self.receiver_display.pack(fill="x", padx=8, pady=(4, 6))
+        self.rx_freq_display_var = tk.StringVar(value=f"FREQ  {self.freq_var.get()}")
+        self.rx_mode_display_var = tk.StringVar(value=f"MODE  {self.mode_var.get()}")
+        self.rx_signal_display_var = tk.StringVar(value="SIGNAL  -120.0 dBFS")
+        self.rx_gps_display_var = tk.StringVar(value="GPS  NO GPS")
+        self.rx_utc_display_var = tk.StringVar(value="UTC  --")
+        ttk.Label(self.receiver_display, textvariable=self.rx_freq_display_var, style="ReceiverDisplay.TLabel").grid(row=0, column=0, sticky="w", padx=(0, 20), pady=2)
+        ttk.Label(self.receiver_display, textvariable=self.rx_mode_display_var, style="ReceiverDisplay.TLabel").grid(row=0, column=1, sticky="w", pady=2)
+        ttk.Label(self.receiver_display, textvariable=self.rx_signal_display_var, style="ReceiverDisplay.TLabel").grid(row=1, column=0, columnspan=2, sticky="w", pady=2)
+        ttk.Label(self.receiver_display, textvariable=self.rx_gps_display_var, style="ReceiverDisplaySmall.TLabel").grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 1))
+        ttk.Label(self.receiver_display, textvariable=self.rx_utc_display_var, style="ReceiverDisplaySmall.TLabel").grid(row=3, column=0, columnspan=2, sticky="w", pady=1)
+        self.receiver_display.columnconfigure(0, weight=1)
+        self.receiver_display.columnconfigure(1, weight=1)
 
         steps = ttk.Frame(panel, padding=(8, 0, 8, 6), style="CRT.TFrame")
         steps.pack(fill="x")
@@ -586,15 +600,15 @@ class RFILoggerApp(tk.Tk):
         self.mode_button_frame = ttk.Frame(mode_panel, padding=(8, 6, 8, 2), style="CRT.TFrame")
         self.mode_button_frame.pack(fill="x")
         self.mode_buttons = {}
-        for idx, mode in enumerate(["AM", "NFM", "WFM", "USB", "LSB", "CW-U", "CW-L"]):
+        for idx, mode in enumerate(["AM", "NFM", "WFM", "USB", "LSB"]):
             btn = ttk.Button(
                 self.mode_button_frame,
                 text=mode,
                 style="Mode.TButton",
                 command=lambda m=mode: self.set_mode(m),
             )
-            btn.grid(row=idx // 4, column=idx % 4, padx=3, pady=2, sticky="ew")
-            self.mode_button_frame.columnconfigure(idx % 4, weight=1)
+            btn.grid(row=0, column=idx, padx=3, pady=2, sticky="ew")
+            self.mode_button_frame.columnconfigure(idx, weight=1)
             self.mode_buttons[mode] = btn
         self._update_mode_buttons()
         sdr_row = ttk.Frame(mode_panel, padding=(8, 2, 8, 8), style="CRT.TFrame")
@@ -607,7 +621,7 @@ class RFILoggerApp(tk.Tk):
         self.connect_sdr_button.pack(side="left", padx=(6, 0))
 
         controls = ttk.LabelFrame(right, text="SDR Controls", style="CRT.TLabelframe")
-        controls.pack(fill="x", pady=4)
+        controls.pack(fill="x", pady=(0, 4))
         row1 = ttk.Frame(controls, padding=(8, 6, 8, 2), style="CRT.TFrame")
         row1.pack(fill="x")
         self.lna_label = ttk.Label(row1, text="LNA")
@@ -617,6 +631,11 @@ class RFILoggerApp(tk.Tk):
         ttk.Label(row1, text="VGA").grid(row=1, column=0, sticky="w", pady=(4,0))
         self._crt_scale(row1, self.vga_var, 0, 62, command=lambda e: self.on_gain_slider_changed()).grid(row=1, column=1, sticky="ew", padx=5, pady=(4,0))
         ttk.Label(row1, textvariable=self.vga_value_var, width=6).grid(row=1, column=2, padx=2, pady=(4,0))
+        ttk.Label(row1, text="PPM").grid(row=2, column=0, sticky="w", pady=(4,0))
+        self.ppm_entry = ttk.Entry(row1, textvariable=self.ppm_correction_var, width=8)
+        self.ppm_entry.grid(row=2, column=1, sticky="w", padx=5, pady=(4,0))
+        self.ppm_entry.bind("<Return>", lambda e: self.tune_from_entry())
+        self.ppm_entry.bind("<KP_Enter>", lambda e: self.tune_from_entry())
         row1.columnconfigure(1, weight=1)
         btn_row = ttk.Frame(controls, padding=(8, 2, 8, 4), style="CRT.TFrame")
         btn_row.pack(fill="x")
@@ -635,7 +654,7 @@ class RFILoggerApp(tk.Tk):
         self.audio_status_var = tk.StringVar(value="Audio: OFF")
 
         log_panel = ttk.LabelFrame(right, text="Logging Status", style="CRT.TLabelframe")
-        log_panel.pack(fill="x", pady=4)
+        log_panel.pack(fill="x", pady=(4, 0))
         ttk.Label(log_panel, textvariable=self.logging_panel_var, font=("Consolas", 14, "bold")).pack(pady=(6, 1))
         ttk.Label(log_panel, textvariable=self.logging_detail_var, font=("Consolas", 9)).pack(pady=(0, 3))
         log_buttons = ttk.Frame(log_panel, style="CRT.TFrame")
@@ -655,12 +674,12 @@ class RFILoggerApp(tk.Tk):
         )
         self.log_interval_combo.grid(row=0, column=1, padx=(4, 12), sticky="w")
         self.log_interval_combo.bind("<<ComboboxSelected>>", lambda e: self.on_log_interval_changed())
-        ttk.Checkbutton(log_opts, text="KML text", variable=self.kml_signal_labels_var).grid(row=0, column=2, sticky="w")
-        ttk.Label(log_opts, text="Bands G<").grid(row=1, column=0, sticky="w", pady=(4,0))
+        ttk.Checkbutton(log_opts, text="Show signal labels", variable=self.kml_signal_labels_var).grid(row=0, column=2, columnspan=4, sticky="w")
+        ttk.Label(log_opts, text="Green <").grid(row=1, column=0, sticky="w", pady=(4,0))
         ttk.Entry(log_opts, textvariable=self.kml_green_below_var, width=6).grid(row=1, column=1, sticky="w", pady=(4,0))
-        ttk.Label(log_opts, text="Y<").grid(row=1, column=2, sticky="e", pady=(4,0))
+        ttk.Label(log_opts, text="Yellow <").grid(row=1, column=2, sticky="e", pady=(4,0))
         ttk.Entry(log_opts, textvariable=self.kml_yellow_below_var, width=6).grid(row=1, column=3, sticky="w", pady=(4,0))
-        ttk.Label(log_opts, text="O<").grid(row=1, column=4, sticky="e", pady=(4,0))
+        ttk.Label(log_opts, text="Orange <").grid(row=1, column=4, sticky="e", pady=(4,0))
         ttk.Entry(log_opts, textvariable=self.kml_orange_below_var, width=6).grid(row=1, column=5, sticky="w", pady=(4,0))
 
         self.sdrplay_map_var = tk.StringVar(value="MAP: --")
@@ -674,8 +693,9 @@ class RFILoggerApp(tk.Tk):
             self.update_idletasks()
             screen_w = self.winfo_screenwidth()
             screen_h = self.winfo_screenheight()
-            target_w = min(1280, max(1180, screen_w - 40))
-            target_h = min(720, max(680, screen_h - 60))
+            target_w = min(max(1180, min(screen_w - 40, 1280)), screen_w)
+            # RC11: fit to content instead of forcing a tall empty window.
+            target_h = min(max(440, min(screen_h - 60, 460)), screen_h)
             geom = str(self.settings.get("window_geometry", ""))
             if "+" in geom:
                 parts = geom.split("+")
@@ -686,7 +706,7 @@ class RFILoggerApp(tk.Tk):
             y = max(0, int((screen_h - target_h) / 2))
             self.geometry(f"{int(target_w)}x{int(target_h)}+{x}+{y}")
         except Exception:
-            self.geometry("1280x720")
+            self.geometry("1280x460")
 
     def _schedule_update_loop(self, delay_ms=40):
         if getattr(self, "_closing", False):
@@ -1053,7 +1073,7 @@ class RFILoggerApp(tk.Tk):
             lens = "#185818"
             core = "#38C838"
             highlight = "#5E3A8C"
-            outline = "#6F4AA0"
+            outline = "#4D3272"
         else:
             if high_flash_on:
                 glow = "#3A0505"
@@ -1218,6 +1238,8 @@ class RFILoggerApp(tk.Tk):
                 self.current_dbfs -= 10.0
             self.signal_var.set(f"{self.current_dbfs:.1f} dBFS")
             self.compact_meter_var.set(f"SIGNAL {self.current_dbfs:6.1f} dBFS")
+            if hasattr(self, "rx_signal_display_var"):
+                self.rx_signal_display_var.set(f"SIGNAL  {self.current_dbfs:.1f} dBFS")
 
         # v0.4.1 SDRplay IQ boost/validation diagnostic.  If the SDRplay stream is real but
         # audio is static, the signal may be arriving at a non-zero IF.  Analyze
@@ -1300,8 +1322,16 @@ class RFILoggerApp(tk.Tk):
         # slower because audio stability is more important than a lively meter.
         if now - self._last_visual_update >= 1.00:
             self._last_visual_update = now
-            if hasattr(self, "dot_panel"):
-                self.dot_panel.set_values(self.freq_var.get(), self.mode_var.get(), "", self.current_dbfs, "", *self._gps_panel_lines(), gain_line=f"LNA {self.lna_var.get():02d} VGA {self.vga_var.get():02d}")
+            if hasattr(self, "rx_freq_display_var"):
+                self.rx_freq_display_var.set(f"FREQ  {self.freq_var.get()}")
+            if hasattr(self, "rx_mode_display_var"):
+                self.rx_mode_display_var.set(f"MODE  {self.mode_var.get()}")
+            if hasattr(self, "rx_gps_display_var") or hasattr(self, "rx_utc_display_var"):
+                gps_line, utc_line = self._gps_panel_lines()
+                if hasattr(self, "rx_gps_display_var"):
+                    self.rx_gps_display_var.set(gps_line)
+                if hasattr(self, "rx_utc_display_var"):
+                    self.rx_utc_display_var.set(utc_line)
             internal_note = f"audio offset {self._active_audio_tuning_offset_hz()/1000:+.0f}k" if self._active_audio_tuning_offset_hz() else "direct center"
             self.receiver_validation_var.set(
                 f"REQ {self.display_frequency_hz/1_000_000:.6f} MHz | {self._radio_label()} {self.radio.frequency_hz/1_000_000:.6f} MHz | "

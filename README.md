@@ -1,20 +1,18 @@
 # RFI Autologger for SDR by N4EAC
 
-**Version:** `1.0.0-rc8`  
+**Version:** `1.0.0`  
 **Platform:** Windows 10/11  
-**Status:** Release Candidate 8
+**Status:** Final Release
 
 RFI Autologger for SDR by N4EAC is a field-oriented RF interference logging tool for SDR receivers. It is designed to help locate and document RF interference by receiving a signal, measuring tuned-channel signal level in dBFS, recording GPS position, and exporting logs to CSV and Google Earth KML.
 
 The interface is intentionally simple and instrument-like: frequency, mode, signal value, GPS status, logging status, gain controls, and SDR selection.
-<img width="1182" height="732" alt="image" src="https://github.com/user-attachments/assets/9de7e0c5-53eb-4a05-bb76-ac94629e2259" />
 
 ---
 
-### RC6 UI Note
+## Release Notes for v1.0.0
 
-RC6 keeps the two-column 1280x720-friendly layout from RC5 and refines the CDE-inspired theme. The main application remains purple/beige, while the Receiver Panel dot-matrix display now uses a dark recessed instrument-style background for improved readability. No SDR, DSP, GPS, logging, or KML behavior was changed for RC6.
-
+This first final release focuses on reliable field logging with HackRF and RTL-SDR, plus functional beta support for SDRplay. The UI has been simplified for readability, with KML export, editable color thresholds, optional signal labels, and tuned-channel pre-demod IQ dBFS measurements for better RF mapping.
 
 ## Supported SDR Receivers
 
@@ -32,7 +30,7 @@ SDRplay support is functional but still marked beta. For SDRplay, connect the re
 ## Main Features
 
 - SDR receiver selection: HackRF, RTL-SDR, SDRplay
-- Modes: AM, NFM, WFM, USB, LSB, CW-U, CW-L
+- Modes: AM, NFM, WFM, USB, LSB
 - Live audio monitor
 - Frequency entry with Enter-to-tune
 - Tuning step buttons
@@ -44,8 +42,8 @@ SDRplay support is functional but still marked beta. For SDRplay, connect the re
 - Optional KML signal text labels for cleaner map display
 - Editable KML color thresholds based on `Signal_dBFS`
 - Tuned-channel pre-demod IQ dBFS measurement for better RF mapping
-- Retro CDE-inspired beige/purple field UI
-- Scrollable/responsive main layout for lower-resolution screens
+- Retro CDE-inspired purple/beige field UI
+- Simplified, readable panel layout
 - Clean shutdown when closing with the Windows X button
 
 ---
@@ -228,7 +226,7 @@ Changes:
 Known limitation: SDRplay should be connected before launching the app; SDRplay hot-plug is not yet reliable.
 
 
-## v1.0.0-rc8 UI update
+## v1.0.0 UI update
 
 - Reworked the UI to fit 1280x720-class screens without a scrollbar.
 - Panels now use a two-column adaptive layout and expand on larger displays.
@@ -236,7 +234,7 @@ Known limitation: SDRplay should be connected before launching the app; SDRplay 
 - No SDR, DSP, audio, GPS, CSV, or KML logic changes.
 
 
-## v1.0.0-rc8 UI refinement
+## v1.0.0 UI refinement
 
 - Kept the RC5 two-column layout for 1280x720-class screens.
 - Changed only the Receiver Panel dot-matrix display to a dark recessed instrument-style background.
@@ -244,7 +242,7 @@ Known limitation: SDRplay should be connected before launching the app; SDRplay 
 - No SDR, DSP, audio, GPS, logging, or KML logic changes.
 
 
-## v1.0.0-rc8 UI fit refinement
+## v1.0.0 UI fit refinement
 - Compact Receiver Panel display to reduce wasted space.
 - Equalized the two main UI columns so controls remain visible on 1280x720-class screens.
 - Reduced receiver dot-matrix panel height and spacing.
@@ -252,10 +250,47 @@ Known limitation: SDRplay should be connected before launching the app; SDRplay 
 - No SDR/DSP/audio/GPS/KML logic changes.
 
 
-## v1.0.0-rc8 layout refinement
+## v1.0.0 layout refinement
 
 - Reworked the Mode / SDR section so all mode buttons remain visible on 1280x720-class displays.
 - Moved Mode / SDR below the frequency controls.
 - Arranged mode buttons in a compact two-row grid.
 - Increased the minimum window width/height to prevent controls from disappearing off the edge.
 - No SDR, DSP, audio, GPS, logging, or KML logic changes.
+
+
+## v1.0.0 UI refinement
+
+- Improved 1280x720 layout consistency.
+- Removed CW-U and CW-L mode buttons from the main UI for RFI-hunting focus.
+- Moved PPM from the Receiver Panel into SDR Controls; pressing ENTER applies it.
+- Widened the frequency entry and clarified ENTER-to-tune behavior.
+- Reduced Receiver Panel display height and tightened dot-matrix spacing.
+- Renamed KML threshold labels to full color names: Green, Yellow, Orange.
+- Renamed KML label option to “Show signal labels”.
+- No SDR/DSP/audio/GPS/KML logic changes.
+
+
+## v1.0.0 layout refinement
+
+- Reduced the minimum window height to avoid the unused lower-half blank area.
+- Compact Receiver Panel dot-matrix display.
+- Preserved RC8/RC9 two-column control layout with all mode buttons visible at 1280x720-class screens.
+- No SDR, DSP, audio, GPS, logging, or KML logic changes.
+
+
+## v1.0.0 UI layout correction
+
+- Reworked the minimum/default window geometry to reduce empty lower-window space.
+- Darkened the CDE purple background to a less pink shade.
+- Cleaned up the Receiver Panel dot-matrix rows to avoid pixel overlap.
+- Removed the remaining PPM `ENTER applies` helper text.
+- No SDR, DSP, audio, GPS, CSV, or KML logic changes.
+
+
+## v1.0.0 UI cleanup
+
+- Replaced the dot-matrix receiver display with simple, readable instrument-style labels.
+- Improved panel spacing and removed cramped receiver text overlap.
+- Kept the purple/beige CDE-inspired theme with a dark receiver display area.
+- No SDR, DSP, GPS, logging, or KML logic changes.
