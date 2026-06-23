@@ -3,6 +3,7 @@
 **Version:** `1.0.0`  
 **Platform:** Windows 10/11  
 **Status:** Final Release
+<img width="1122" height="512" alt="image" src="https://github.com/user-attachments/assets/ccce1996-56ea-416a-9238-8461c94f553d" />
 
 RFI Autologger for SDR by N4EAC is a field-oriented RF interference logging tool for SDR receivers. It is designed to help locate and document RF interference by receiving a signal, measuring tuned-channel signal level in dBFS, recording GPS position, and exporting logs to CSV and Google Earth KML.
 
